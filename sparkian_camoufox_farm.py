@@ -58,6 +58,15 @@ OUT_FILE = "/root/sparkian/camoufox_accounts.jsonl"
 DB_PATH = "/var/lib/9router/db/data.sqlite"
 
 
+def rotate_proxy():
+    try:
+        req = urllib.request.Request(f"{PROXY}/__new_session")
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.read().decode().strip()
+    except Exception as e:
+        return f"err: {e}"
+
+
 def get_fb_key():
     if os.path.exists(FB_KEY_PATH):
         with open(FB_KEY_PATH) as f:
@@ -170,6 +179,7 @@ async def register_account(idx, tm):
     print(f"  Email    : {email}")
     print(f"  Name     : {name}")
 
+    # Camoufox runs direct to avoid WebRTC proxy leak in Cloudflare Turnstile
     async with AsyncCamoufox(headless=True) as browser:
         page = await browser.new_page()
         try:
