@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Output & Accounts Data
+*.jsonl
+accounts.jsonl
+camoufox_accounts.jsonl
+*.txt
+*.png
+*.log
+
+# Sensitive environment
+.env
+.env.*
