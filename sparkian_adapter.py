@@ -122,11 +122,29 @@ def openai_to_sparkian(body, token, ws_slug):
         slug = "anthropic/claude-haiku-5.5"
 
     messages = body.get("messages", [])
-    user_msgs = [m for m in messages if m.get("role") == "user"]
-    last = user_msgs[-1] if user_msgs else messages[-1] if messages else {}
+    system_msgs = [m for m in messages if m.get("role") == "system"]
+    user_msgs = [m for m in messages if m.get("role") in ("user", "assistant")]
+    
+    parts = []
+    # If system messages exist, prepend them into instructions
+    if system_msgs:
+        sys_text = "\n\n".join(
+            (m.get("content", "") if isinstance(m.get("content"), str) else " ".join(p.get("text", "") for p in m.get("content", [])))
+            for m in system_msgs
+        )
+        if sys_text:
+            parts.append({"type": "text", "text": f"[System Instructions]:\n{sys_text}\n\n"})
+
+    last = user_msgs[-1] if user_msgs else (messages[-1] if messages else {})
     content = last.get("content", "")
     if isinstance(content, list):
         content = " ".join(p.get("text", "") for p in content if p.get("type") == "text")
+
+    if content:
+        parts.append({"type": "text", "text": content})
+
+    if not parts:
+        parts.append({"type": "text", "text": "Hello"})
 
     return {
         "action": "send",
@@ -138,7 +156,7 @@ def openai_to_sparkian(body, token, ws_slug):
         "model_slug": slug,
         "parent_message_id": None,
         "workspace_slug": ws_slug,
-        "parts": [{"type": "text", "text": content}],
+        "parts": parts,
         "tools_mode": "auto",
     }
 
